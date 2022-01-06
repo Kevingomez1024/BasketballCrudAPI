@@ -1,0 +1,148 @@
+﻿@page "/getplayers"
+@using BasketballCrudAPI.Data.Models
+@using System.Net.Http.Json
+@inject NavigationManager Navigator
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+
+
+<h1>Players</h1>
+
+<p>This component demonstrates fetching data from the MongoDB database.</p>
+<p>
+    <a href="/addplayer">Add New Player</a>
+</p>
+
+
+@if (Roster == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Number</th>
+                <th>Position</th>
+                <th>Points</th>
+                <th>Assists</th>
+                <th>Rebounds</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var player in Roster)
+            {
+
+                if (player.IsEditing)
+                {
+                    <tr>
+                        <th scope="row">@player.Id</th>
+                        <td>
+                            <input type="text" class="form-control" placeholder="Full Name" @bind-value="player.Name" />
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" placeholder="Number" @bind-value="player.Number" />
+                        </td>
+
+                        <td>
+                            <div class="form-group row">
+                                <div class="col-md-4">
+                                    <select style="width:115px" class="form-control" @bind="player.Position">
+                                        <option value="">-- Select Position --</option>
+                                        <option value="PG">Point Guard</option>
+                                        <option value="SG">Shooting Guard</option>
+                                        <option value="SF">Small Foward</option>
+                                        <option value="PF">Power Foward</option>
+                                        <option value="C">Center</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" placeholder="Points" @bind-value="player.Points" />
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" placeholder="Assists" @bind-value="player.Assists" />
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" placeholder="Rebounds" @bind-value="player.Rebounds" />
+                        </td>
+                        <td>
+                            <a href="javascript:void(0)" style="color:red" @onclick="() => EnableEditing(false, player)">Cancel</a> |
+                            <a href="javascript:void(0)" style="color:green" @onclick="() => UpdatePlayer(player)">Confirm</a>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <td>@player.Id</td>
+                        <td>@player.Name</td>
+                        <td>@player.Number</td>
+                        <td>@player.Position</td>
+                        <td>@player.Points</td>
+                        <td>@player.Assists</td>
+                        <td>@player.Rebounds</td>
+                        <td>
+                            <a href="javascript:void(0)" style="color:blue" @onclick="() => EnableEditing(true, player)">Edit</a>  |
+                            <a href="javascript:void(0)" style="color:red" @onclick="() => DeleteSymbol(player.Id)">Delete</a>
+                        </td>
+                    </tr>
+                }
+
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Player> Roster;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            Roster = await Http.GetFromJsonAsync<List<Player>>($"{Navigator.BaseUri}api/players");
+
+        }
+        catch
+        {
+            System.Console.WriteLine("Players didn't load whatsoever");
+        }
+    }
+
+    async Task DeleteSymbol(string Id)
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Are you sure?");
+        if (confirmed)
+        {
+            await Http.DeleteAsync($"{Navigator.BaseUri}api/players/{Id}");
+            Roster = await Http.GetFromJsonAsync<List<Player>>($"{Navigator.BaseUri}api/players");
+        }
+    }
+
+    private void EnableEditing(bool flag, Player player)
+    {
+        player.IsEditing = flag;
+
+    }
+
+    private async Task UpdatePlayer(Player player)
+    {
+        EnableEditing(false, player);
+        var putBody = new { id = player.Id, name = player.Name, number = player.Number, position = player.Position, points = player.Points, assists = player.Assists, rebounds = player.Rebounds };
+        using var response = await Http.PutAsJsonAsync($"{Navigator.BaseUri}api/players/{player.Id}", putBody);
+        Roster = await Http.GetFromJsonAsync<List<Player>>($"{Navigator.BaseUri}api/players");
+
+    }
+
+
+
+
+
+}

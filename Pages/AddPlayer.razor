@@ -1,0 +1,82 @@
+﻿@page "/addplayer"
+@inject HttpClient Http
+@inject NavigationManager Navigator
+@using BasketballCrudAPI.Data.Models
+@using System.Net.Http.Json
+
+
+<h1>Add Player</h1>
+<hr />
+
+<EditForm Model="@player" OnSubmit="SavePlayer">
+
+    <DataAnnotationsValidator />
+    <div class="form-group row">
+        <label class="control-label col-md-12">Name</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind-value="player.Name" />
+        </div>
+        <ValidationMessage For="@(() => player.Name)" />
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Number</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind-value="player.Number" />
+        </div>
+        <ValidationMessage For="@(() => player.Number)" />
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Position</label>
+        <div class="col-md-4">
+            <select class="form-control" @bind="player.Position">
+                <option value="">-- Select Position --</option>
+                <option value="PG">Point Guard</option>
+                <option value="SG">Shooting Guard</option>
+                <option value="SF">Small Foward</option>
+                <option value="PF">Power Foward</option>
+                <option value="C">Center</option>
+            </select>
+        </div>
+        <ValidationMessage For="@(() => player.Position)" />
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Points</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind-value="player.Points" />
+        </div>
+        <ValidationMessage For="@(() => player.Points)" />
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Assists</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind-value="player.Assists" />
+        </div>
+        <ValidationMessage For="@(() => player.Assists)" />
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Rebounds</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind-value="player.Rebounds" />
+        </div>
+        <ValidationMessage For="@(() => player.Rebounds)" />
+    </div>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button class="btn btn-light"><a href="/getplayers">Cancel</a></button>
+    </div>
+</EditForm>
+@code {
+
+    protected Player player = new Player();
+
+
+    protected async Task SavePlayer()
+    {
+        var postBody = new { id = "", name = player.Name, number = player.Number, position = player.Position, points = player.Points, assists = player.Assists, rebounds = player.Rebounds};
+        var response = await Http.PostAsJsonAsync($"{Navigator.BaseUri}api/players", postBody);
+        response.EnsureSuccessStatusCode();
+        Navigator.NavigateTo($"{Navigator.BaseUri}getplayers");
+
+    }
+}
